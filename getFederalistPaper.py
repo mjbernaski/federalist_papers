@@ -4,22 +4,27 @@ import os
 
 def get_paper(number: int) -> dict:
     """Retrieve a specific Federalist Paper from the JSON file."""
-    try:
-        with open('federalist_papers.json', 'r', encoding='utf-8') as f:
-            papers = json.load(f)
+    # Try fp_edited.json first, then fall back to federalist_papers.json
+    json_files = ['fp_edited.json', 'federalist_papers.json']
+    
+    for json_file in json_files:
+        try:
+            with open(json_file, 'r', encoding='utf-8') as f:
+                papers = json.load(f)
+                
+            # Find the paper with the specified number
+            for paper in papers:
+                if paper['number'] == number:
+                    return paper
             
-        # Find the paper with the specified number
-        for paper in papers:
-            if paper['number'] == number:
-                return paper
-        
-        return None
-    except FileNotFoundError:
-        print("Error: federalist_papers.json not found. Please run processInput.py first.")
-        sys.exit(1)
-    except json.JSONDecodeError:
-        print("Error: Invalid JSON file.")
-        sys.exit(1)
+        except FileNotFoundError:
+            continue
+        except json.JSONDecodeError:
+            print(f"Error: Invalid JSON file: {json_file}")
+            continue
+    
+    print("Error: No valid JSON source found. Please run processInput.py first.")
+    sys.exit(1)
 
 def save_paper_to_txt(paper: dict, output_dir: str = "papers"):
     """Save the paper to a text file."""

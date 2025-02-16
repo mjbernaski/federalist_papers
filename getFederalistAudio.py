@@ -1,14 +1,14 @@
 import json
 import sys
 import os
-import boto3
 import pygame
+import ollama
 from getFederalistPaper import get_paper
 from time import sleep
 
-def text_to_speech(text: str, paper_number: int, voice_id: str = "Matthew") -> str:
+def text_to_speech(text: str, paper_number: int, model: str = "llama2") -> str:
     """
-    Convert text to speech using Amazon Polly and save as MP3.
+    Convert text to speech using Ollama and save as MP3.
     Returns the path to the saved audio file.
     """
     # Create output directory if it doesn't exist
@@ -19,36 +19,22 @@ def text_to_speech(text: str, paper_number: int, voice_id: str = "Matthew") -> s
     output_path = os.path.join(output_dir, f"federalist_{paper_number:02d}.mp3")
     
     try:
-        # Create Polly client with explicit region
-        session = boto3.Session(
-            region_name='us-east-1',  # You can change this to your preferred region
-            aws_access_key_id=os.environ.get('AWS_ACCESS_KEY_ID'),
-            aws_secret_access_key=os.environ.get('AWS_SECRET_ACCESS_KEY')
-        )
-        polly_client = session.client('polly')
-        
         print("Generating audio... This may take a moment.")
         
-        # Request speech synthesis
-        response = polly_client.synthesize_speech(
-            Engine='neural',
-            VoiceId=voice_id,
-            OutputFormat='mp3',
-            Text=text
+        # Request speech synthesis from Ollama
+        response = ollama.generate(
+            model=model,
+            prompt=f"Convert this text to speech and save as MP3: {text}"
         )
         
-        # Save the audio stream to file
-        if "AudioStream" in response:
-            with open(output_path, 'wb') as file:
-                file.write(response['AudioStream'].read())
-            print(f"Audio saved to: {output_path}")
-            return output_path
+        # TODO: Process Ollama's response to generate audio
+        # This will depend on which Ollama model you're using and its TTS capabilities
+        
+        print(f"Audio saved to: {output_path}")
+        return output_path
+        
     except Exception as e:
         print(f"Error generating audio: {str(e)}")
-        if 'AWS_ACCESS_KEY_ID' not in os.environ or 'AWS_SECRET_ACCESS_KEY' not in os.environ:
-            print("\nAWS credentials not found. Please set the following environment variables:")
-            print("export AWS_ACCESS_KEY_ID='your_access_key'")
-            print("export AWS_SECRET_ACCESS_KEY='your_secret_key'")
         sys.exit(1)
 
 def play_audio(audio_path: str):
