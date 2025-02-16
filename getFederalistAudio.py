@@ -55,7 +55,9 @@ def play_audio(audio_path: str):
 
 def prepare_text_for_speech(paper: dict) -> str:
     """Prepare the paper text for speech synthesis."""
-    return f"""Federalist Paper Number {paper['number']}, by {paper['author']}.
+    topics_text = f"Topics: {', '.join(paper['topics'])}. " if 'topics' in paper else ""
+    
+    return f"""Federalist Paper Number {paper['number']}, by {paper['author']}. {topics_text}
     
     {paper['text']}
     
